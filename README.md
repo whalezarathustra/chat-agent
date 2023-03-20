@@ -1,5 +1,11 @@
 # 简单的OpenAI chatGPT代理
 
+### 安装
+```
+使用pip安装最新版本，指定到官方pypi源
+pip install chat-agent==0.0.2 -i https://pypi.org/simple/
+```
+
 ### 环境变量配置项：
 ```
 必配：
@@ -22,4 +28,6 @@ CHAT_AGENT_PORT：代理端口，默认8080
 
 ### 使用
 通过在浏览器打开以下链接便可使用
+```
 http://127.0.0.1:8080
+```
