@@ -22,7 +22,6 @@ def chat():
 
 def start_agent():
     app.run(
-        host='0.0.0.0',
         port=CHAT_GENT_PORT
     )
 

@@ -3,7 +3,7 @@
 ### 安装
 ```
 使用pip安装最新版本，指定到官方pypi源
-pip install chat-agent==0.0.2 -i https://pypi.org/simple/
+pip install chat-agent==0.1.0 -i https://pypi.org/simple/
 ```
 
 ### 环境变量配置项：
