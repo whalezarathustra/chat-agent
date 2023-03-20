@@ -1,0 +1,5 @@
+venv
+chat_agent.egg-info
+dist
+build
+.idea

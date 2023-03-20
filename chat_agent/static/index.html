@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #chat-window {
+            width: 80%;
+            height: 70%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: white;
+            overflow-y: auto;
+        }
+
+        #input-form {
+            width: 80%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #input-text {
+            flex-grow: 1;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: #cce5ff;
+            text-align: right;
+        }
+
+        .ai {
+            align-self: flex-start;
+            background-color: #e2e3e5;
+            text-align: left;
+        }
+
+        #input-text {
+            resize: none;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .message-container.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-container.user .avatar {
+            margin-right: 0;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+<div id="chat-window"></div>
+<form id="input-form">
+    <textarea id="input-text" rows="1" placeholder="Type your message..."></textarea>
+    <button type="submit">Send</button>
+</form>
+
+<script>
+    const chatWindow = document.getElementById("chat-window");
+    const inputForm = document.getElementById("input-form");
+    const inputText = document.getElementById("input-text");
+
+    inputForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const message = inputText.value.trim();
+        if (message === "") return;
+        addMessageToWindow("User", message);
+        inputText.value = "";
+        inputText.style.height = "auto";
+
+        // 从流式API接收数据
+        await receiveStreamData(message);
+    });
+
+    inputText.addEventListener("input", () => {
+        inputText.style.height = "auto";
+        inputText.style.height = inputText.scrollHeight + "px";
+    });
+
+    // 模拟从流式API接收数据的异步操作
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function* fetchStreamData(message) {
+        const response = await fetch("chat?msg=" + message);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        try {
+            while (true) {
+                const {value, done} = await reader.read();
+
+                if (done) {
+                    break;
+                }
+
+                const decodedValue = decoder.decode(value);
+                yield decodedValue;
+            }
+        } finally {
+            reader.releaseLock();
+        }
+    }
+
+    async function receiveStreamData(message) {
+        let currentText = "";
+        let aiMessage;
+
+        for await (const data of fetchStreamData(message)) {
+            currentText += data;
+            aiMessage = addMessageToWindow("AI", currentText, aiMessage);
+            await sleep(100);
+        }
+    }
+
+    function addMessageToWindow(sender, message, aiMessage = null) {
+        const messageContainer = document.createElement("div");
+        messageContainer.classList.add("message-container");
+        messageContainer.classList.add(sender.toLowerCase());
+
+        const avatar = document.createElement("img");
+        avatar.classList.add("avatar");
+        avatar.src = sender === "User" ? "./static/icon/whale.png" : "./static/icon/openai.png";
+        messageContainer.appendChild(avatar);
+
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+        messageElement.classList.add(sender.toLowerCase());
+        messageElement.textContent = message;
+        messageContainer.appendChild(messageElement);
+
+        if (sender === "AI" && aiMessage) {
+            aiMessage.textContent = message;
+            return aiMessage;
+        } else {
+            chatWindow.appendChild(messageContainer);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return messageElement;
+        }
+    }
+
+    function autoResize() {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+    }
+
+    inputText.addEventListener("input", autoResize);
+</script>
+</body>
+</html>
