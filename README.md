@@ -1,6 +1,6 @@
-简单的OpenAI chatGPT代理
+# 简单的OpenAI chatGPT代理
 
-环境变量配置项：
+### 环境变量配置项：
 ```
 必配：
 OPENAI_ORGANIZATION_KEY: openai对应的组织id
@@ -15,11 +15,11 @@ OPENAI_TEMPERATURE：采样温度，默认0.7
 CHAT_AGENT_PORT：代理端口，默认8080
 ```
 
-启动代理
+### 启动代理
 ```
  python -m chat_agent.app
 ```
 
-使用
+### 使用
 通过在浏览器打开以下链接便可使用
- http://127.0.0.1:5000
+http://127.0.0.1:8080
