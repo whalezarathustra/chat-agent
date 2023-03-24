@@ -3,7 +3,7 @@
 ### 安装
 ```
 使用pip安装最新版本，指定到官方pypi源
-pip install chat-agent==0.1.1 -i https://pypi.org/simple/
+pip install chat-agent==0.1.2 -i https://pypi.org/simple/
 ```
 
 ### 环境变量配置项：
@@ -18,7 +18,10 @@ OPENAI_HISTORY_TOKEN_MAX：历史聊天token最大值，适当设置，默认204
 OPENAI_MODEL：模型名，默认gpt-3.5-turbo
 OPENAI_TEMPERATURE：采样温度，默认0.7
 
+CHAT_AGENT_HOST_DEFAULT：监听地址，默认0.0.0.0
 CHAT_AGENT_PORT：代理端口，默认8080
+CACHE_CHAT_LOG_EXPIRE：缓存聊天信息的过期时间，默认3600
+
 ```
 
 ### 启动代理

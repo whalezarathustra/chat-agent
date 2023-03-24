@@ -3,6 +3,10 @@ import tiktoken
 
 from chat_agent.cache.cache_helper import get_cache, CHAT_LOG, save_cache
 from chat_agent.handler import CHAT_ROUND, CHAT_TOKEN_MAX, HISTORY_TOKEN_MAX, MODEL, TEMPERATURE
+from chat_agent.logger.logger_helper import get_logger
+from chat_agent.util.context import get_thread_context
+
+logger = get_logger(__name__)
 
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
@@ -26,6 +30,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
 
 
 def get_valid_chat_log(chat_log: []):
+    sid = get_thread_context()['sid']
     valid_context_chat_log = []
     for chat in chat_log:
         if 'user' == chat['role']:
@@ -38,15 +43,18 @@ def get_valid_chat_log(chat_log: []):
         if token_count > HISTORY_TOKEN_MAX:
             temp_messages = temp_messages[1:]
         else:
-            print("Current token count: ", token_count)
+            logger.debug('sid: {} current token count: {}'.format(sid, token_count))
             break
     return temp_messages
 
 
 def send_chat_message_with_steam_response(msg: str, chat_log: [] = None):
+    sid = get_thread_context()['sid']
+    ip = get_thread_context()['remote_ip']
+    logger.debug('receive msg, sid: {} ip: {} msg: {}'.format(sid, ip, msg))
     is_need_cache = False
     if not chat_log:
-        chat_log = get_cache(CHAT_LOG)
+        chat_log = get_cache(CHAT_LOG, sid=sid)
         is_need_cache = True
     cur_msg = {'role': 'user', 'content': msg}
     chat_log.append(cur_msg)
@@ -75,10 +83,11 @@ def send_chat_message_with_steam_response(msg: str, chat_log: [] = None):
                 yield chunk_text
             else:
                 break
+        logger.debug('finish chat, sid: {} whole_response: {}'.format(sid, whole_response_msg))
         chat_log.append({
             'role': 'system', 'content': whole_response_msg
         })
         if is_need_cache:
-            save_cache(CHAT_LOG, chat_log)
+            save_cache(CHAT_LOG, sid=sid, data=chat_log)
     except Exception as e:
-        print('send message has exception, msg: ', e)
+        logger.error('send message has exception, msg: ' + e)

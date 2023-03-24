@@ -3,3 +3,4 @@ chat_agent.egg-info
 dist
 build
 .idea
+chat_agent/logs

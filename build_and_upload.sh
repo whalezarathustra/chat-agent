@@ -1,5 +1,8 @@
 #!/bin.sh
 
+# clear cache
+find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+
 # install
 pip install --upgrade setuptools wheel
 python setup.py sdist bdist_wheel

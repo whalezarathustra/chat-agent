@@ -1,0 +1,7 @@
+from chat_agent.config import config_helper
+
+CACHE_CHAT_LOG_EXPIRE_KEY = 'CACHE_CHAT_LOG_EXPIRE'
+
+CACHE_CHAT_LOG_EXPIRE_DEFAULT = 3600
+
+CACHE_CHAT_LOG_EXPIRE = config_helper.get_config_from_env(CACHE_CHAT_LOG_EXPIRE_KEY, CACHE_CHAT_LOG_EXPIRE_DEFAULT)
