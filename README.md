@@ -3,7 +3,7 @@
 ### 安装
 ```
 使用pip安装最新版本，指定到官方pypi源
-pip install chat-agent==0.1.2 -i https://pypi.org/simple/
+pip install chat-agent==0.1.3 -i https://pypi.org/simple/
 ```
 
 ### 环境变量配置项：
@@ -26,7 +26,7 @@ CACHE_CHAT_LOG_EXPIRE：缓存聊天信息的过期时间，默认3600
 
 ### 启动代理
 ```
- python -m chat_agent.app
+python -m chat_agent.app
 ```
 
 ### 使用

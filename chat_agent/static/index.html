@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat with AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked@3.0.8/lib/marked.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,7 +18,8 @@
         }
 
         #chat-window {
-            width: 80%;
+            width: 100%;
+            max-width: 800px;
             height: 70%;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -27,7 +29,8 @@
         }
 
         #input-form {
-            width: 80%;
+            width: 100%;
+            max-width: 800px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -86,7 +89,47 @@
             margin-right: 0;
             margin-left: 10px;
         }
+
+        /* Add responsive styles for different screen widths */
+        @media screen and (max-width: 767px) {
+            body {
+                font-size: 14px;
+            }
+
+            #chat-window {
+                width: 95%;
+            }
+
+            #input-form {
+                width: 95%;
+                flex-direction: column;
+            }
+
+            #input-text {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
+            .avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .message {
+                font-size: 14px;
+                padding: 5px 8px;
+                max-width: 80%;
+            }
+
+            button {
+                width: 100%;
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+
     </style>
+
 </head>
 <body>
 <div id="chat-window"></div>
@@ -96,6 +139,14 @@
 </form>
 
 <script>
+    function sendWelcomeMessage() {
+        const welcomeMessage = "欢迎来到 AI 聊天！我是你的智能助手，有什么问题我可以帮你解答吗？";
+        addMessageToWindow("AI", welcomeMessage);
+    }
+
+    // 在页面加载完成后调用 sendWelcomeMessage 函数
+    window.addEventListener("DOMContentLoaded", sendWelcomeMessage);
+
     const chatWindow = document.getElementById("chat-window");
     const inputForm = document.getElementById("input-form");
     const inputText = document.getElementById("input-text");
@@ -117,13 +168,8 @@
         inputText.style.height = inputText.scrollHeight + "px";
     });
 
-    // 模拟从流式API接收数据的异步操作
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     async function* fetchStreamData(message) {
-        const response = await fetch("chat?msg=" + message);
+        const response = await fetch("/chat?msg=" + message);
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
@@ -131,11 +177,9 @@
         try {
             while (true) {
                 const {value, done} = await reader.read();
-
                 if (done) {
                     break;
                 }
-
                 const decodedValue = decoder.decode(value);
                 yield decodedValue;
             }
@@ -144,14 +188,37 @@
         }
     }
 
+    function completeMarkdownCodeBlock(mdText) {
+        const codeBlockRegex = /(^|\n)```[\w]*\n/;
+        const codeBlockDelimiter = '```';
+
+        if (codeBlockRegex.test(mdText)) {
+            const codeBlockOccurrences = (mdText.match(new RegExp(codeBlockDelimiter, 'g')) || []).length;
+            const isEven = codeBlockOccurrences % 2 === 0;
+
+            if (!isEven) {
+                const lastDelimiterIndex = mdText.lastIndexOf(codeBlockDelimiter);
+                const lastNewlineIndex = mdText.lastIndexOf('\n');
+
+                if (lastDelimiterIndex !== lastNewlineIndex - codeBlockDelimiter.length) {
+                    mdText += '\n' + codeBlockDelimiter;
+                }
+            }
+        }
+
+        return mdText;
+    }
+
+
     async function receiveStreamData(message) {
         let currentText = "";
         let aiMessage;
 
         for await (const data of fetchStreamData(message)) {
             currentText += data;
-            aiMessage = addMessageToWindow("AI", currentText, aiMessage);
-            await sleep(100);
+            const completedText = completeMarkdownCodeBlock(currentText);
+            const htmlText = marked.parse(completedText);
+            aiMessage = addMessageToWindow("AI", htmlText, aiMessage);
         }
     }
 
@@ -162,17 +229,17 @@
 
         const avatar = document.createElement("img");
         avatar.classList.add("avatar");
-        avatar.src = sender === "User" ? "./static/icon/whale.png" : "./static/icon/openai.png";
+        avatar.src = sender === "User" ? "/static/icon/whale.png" : "/static/icon/openai.png";
         messageContainer.appendChild(avatar);
 
         const messageElement = document.createElement("div");
         messageElement.classList.add("message");
         messageElement.classList.add(sender.toLowerCase());
-        messageElement.textContent = message;
+        messageElement.innerHTML = message;
         messageContainer.appendChild(messageElement);
 
         if (sender === "AI" && aiMessage) {
-            aiMessage.textContent = message;
+            aiMessage.innerHTML = message;
             return aiMessage;
         } else {
             chatWindow.appendChild(messageContainer);
@@ -190,3 +257,4 @@
 </script>
 </body>
 </html>
+
