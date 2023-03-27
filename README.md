@@ -3,7 +3,7 @@
 ### 安装
 ```
 使用pip安装最新版本，指定到官方pypi源
-pip install chat-agent==0.1.3 -i https://pypi.org/simple/
+pip install chat-agent==0.1.4 -i https://pypi.org/simple/
 ```
 
 ### 环境变量配置项：
@@ -22,7 +22,15 @@ CHAT_AGENT_HOST_DEFAULT：监听地址，默认0.0.0.0
 CHAT_AGENT_PORT：代理端口，默认8080
 CACHE_CHAT_LOG_EXPIRE：缓存聊天信息的过期时间，默认3600
 
+CHAT_AGENT_HTTPS：是否开启https，默认True
+CHAT_AGENT_HTTPS_PORT：http端口，默认443
+CHAT_AGENT_SSL_CERT_FILE_FULL_PATH：证书文件完整路径，默认cert.pem
+CHAT_AGENT_SSL_KEY_FILE_FULL_PATH：证书key文件完整路径，默认key.pem
+CHAT_AGENT_STATIC_PATH：静态文件路径，用于进行指定路径的隐藏文件路由，可用于进行certbot的CA服务验证使用
 ```
+
+### SSL证书
+可参考：https://eff-certbot.readthedocs.io/en/stable/using.html#certbot-commands
 
 ### 启动代理
 ```
