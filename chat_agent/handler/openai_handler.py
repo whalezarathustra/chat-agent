@@ -1,9 +1,12 @@
+import json
+
 import openai
 import tiktoken
 
 from chat_agent.cache.cache_helper import get_cache, CHAT_LOG, save_cache
 from chat_agent.handler import CHAT_ROUND, CHAT_TOKEN_MAX, HISTORY_TOKEN_MAX, MODEL, TEMPERATURE
 from chat_agent.logger.logger_helper import get_logger
+from chat_agent.util import random
 from chat_agent.util.context import get_thread_context
 
 logger = get_logger(__name__)
@@ -91,3 +94,25 @@ def send_chat_message_with_steam_response(msg: str, chat_log: [] = None):
             save_cache(CHAT_LOG, sid=sid, data=chat_log)
     except Exception as e:
         logger.error('send message has exception, msg: ' + e)
+
+
+def send_chat_message_with_socket_steam_response(msg: str, chat_log: [] = None):
+    msg_id = random.get_random_md5()
+    index = 0
+    sid = get_thread_context()['sid']
+    for response in send_chat_message_with_steam_response(msg=msg, chat_log=chat_log):
+        response_msg = {
+            'sid': sid,
+            'msg_id': msg_id,
+            'index': index,
+            'data': response,
+            'end': False
+        }
+        index += 1
+        yield json.dumps(response_msg)
+    end_msg = {
+        'sid': sid,
+        'msg_id': msg_id,
+        'end': True
+    }
+    yield json.dumps(end_msg)

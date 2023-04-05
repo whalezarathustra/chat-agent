@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked@3.0.8/lib/marked.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #chat-window {
+            width: 100%;
+            max-width: 800px;
+            height: 70%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: white;
+            overflow-y: auto;
+        }
+
+        #input-form {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #input-text {
+            flex-grow: 1;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: #cce5ff;
+            text-align: right;
+        }
+
+        .ai {
+            align-self: flex-start;
+            background-color: #e2e3e5;
+            text-align: left;
+        }
+
+        #input-text {
+            resize: none;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .message-container.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-container.user .avatar {
+            margin-right: 0;
+            margin-left: 10px;
+        }
+
+        /* Add responsive styles for different screen widths */
+        @media screen and (max-width: 767px) {
+            body {
+                font-size: 14px;
+            }
+
+            #chat-window {
+                width: 95%;
+            }
+
+            #input-form {
+                width: 95%;
+                flex-direction: column;
+            }
+
+            #input-text {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
+            .avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .message {
+                font-size: 14px;
+                padding: 5px 8px;
+                max-width: 80%;
+            }
+
+            button {
+                width: 100%;
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+
+    </style>
+
+</head>
+<body>
+<div id="chat-window"></div>
+<form id="input-form">
+    <textarea id="input-text" rows="1" placeholder="Type your message..."></textarea>
+    <button id="submitBtn" , type="submit">Send</button>
+</form>
+
+<script>
+
+    let socket = null;
+    let sid = "";
+
+    function sendWelcomeMessage() {
+        const welcomeMessage = "欢迎来到 AI 聊天！我是你的智能助手，有什么问题我可以帮你解答吗？";
+        addMessageToWindow("AI", welcomeMessage);
+    }
+
+    // 在页面加载完成后调用 sendWelcomeMessage 函数
+    window.addEventListener("DOMContentLoaded", () => {
+        socket = io.connect(window.location.origin);
+        sendWelcomeMessage();
+    });
+
+    const chatWindow = document.getElementById("chat-window");
+    const inputForm = document.getElementById("input-form");
+    const inputText = document.getElementById("input-text");
+    const submitBtn = document.getElementById("submitBtn");
+
+    inputForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const message = inputText.value.trim();
+        if (message === "") return;
+        addMessageToWindow("User", message);
+        inputText.value = "";
+        inputText.style.height = "auto";
+
+        submitBtn.disabled = true
+
+        function callback() {
+            submitBtn.disabled = false;
+        }
+
+        await fetchWebSocketStreamData(message, callback)
+    });
+
+    inputText.addEventListener("input", () => {
+        inputText.style.height = "auto";
+        inputText.style.height = inputText.scrollHeight + "px";
+    });
+
+    async function fetchWebSocketStreamData(message, callback) {
+        try {
+            const request_msg = {
+                "sid": sid,
+                "data": message
+            }
+            const request_data = JSON.stringify(request_msg)
+            socket.emit('websocket_chat', request_data);
+            let currentText = "";
+            let aiMessage = null;
+            let msg_id = "";
+
+            function receiveSocketMessage(message) {
+                const response_message = JSON.parse(message)
+                if ("" === msg_id) {
+                    msg_id = response_message.msg_id;
+                }
+                if ("" === sid) {
+                    sid = response_message.sid;
+                }
+                if (msg_id !== response_message.msg_id) {
+                    return
+                }
+                if (true === response_message.end && msg_id === response_message.msg_id) {
+                    currentText = "";
+                    aiMessage = null
+                    socket.off('websocket_chat', receiveSocketMessage);
+                    callback()
+                    return
+                }
+                currentText += response_message.data;
+                const completedText = completeMarkdownCodeBlock(currentText);
+                const htmlText = marked.parse(completedText);
+                aiMessage = addMessageToWindow("AI", htmlText, aiMessage);
+            }
+
+            socket.on('websocket_chat', receiveSocketMessage);
+        } catch (exception) {
+            callback()
+        }
+    }
+
+    function completeMarkdownCodeBlock(mdText) {
+        const codeBlockRegex = /(^|\n)```[\w]*\n/;
+        const codeBlockDelimiter = '```';
+
+        if (codeBlockRegex.test(mdText)) {
+            const codeBlockOccurrences = (mdText.match(new RegExp(codeBlockDelimiter, 'g')) || []).length;
+            const isEven = codeBlockOccurrences % 2 === 0;
+
+            if (!isEven) {
+                const lastDelimiterIndex = mdText.lastIndexOf(codeBlockDelimiter);
+                const lastNewlineIndex = mdText.lastIndexOf('\n');
+
+                if (lastDelimiterIndex !== lastNewlineIndex - codeBlockDelimiter.length) {
+                    mdText += '\n' + codeBlockDelimiter;
+                }
+            }
+        }
+
+        return mdText;
+    }
+
+    function addMessageToWindow(sender, message, aiMessage = null) {
+        const messageContainer = document.createElement("div");
+        messageContainer.classList.add("message-container");
+        messageContainer.classList.add(sender.toLowerCase());
+
+        const avatar = document.createElement("img");
+        avatar.classList.add("avatar");
+        avatar.src = sender === "User" ? "/static/icon/whale.png" : "/static/icon/openai.png";
+        messageContainer.appendChild(avatar);
+
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+        messageElement.classList.add(sender.toLowerCase());
+        messageElement.innerHTML = message;
+        messageContainer.appendChild(messageElement);
+
+        if (sender === "AI" && aiMessage) {
+            aiMessage.innerHTML = message;
+            return aiMessage;
+        } else {
+            chatWindow.appendChild(messageContainer);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return messageElement;
+        }
+    }
+
+    function autoResize() {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+    }
+
+    inputText.addEventListener("input", autoResize);
+</script>
+</body>
+</html>
+
