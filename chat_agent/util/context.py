@@ -31,10 +31,10 @@ def get_thread_context():
     return ThreadLocalContextStorage.get()
 
 
-def set_thread_context(context: dict = {}):
-    ThreadLocalContextStorage.set(context)
+def get_thread_context_data(key: str):
+    ctx = get_thread_context()
+    return ctx.get(key)
 
 
-if __name__ == '__main__':
-    set_thread_context(1)
-    print(get_thread_context())
+def set_thread_context(ctx: dict = {}):
+    ThreadLocalContextStorage.set(ctx)

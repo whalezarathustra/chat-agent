@@ -14,3 +14,11 @@ def get_boolean_config_from_env(config_key: str, default=None):
         return True
     else:
         return False
+
+
+def get_int_config_from_env(config_key: str, default=None):
+    val = get_config_from_env(config_key, default)
+    if isinstance(val, str):
+        return int(val)
+    else:
+        return val
