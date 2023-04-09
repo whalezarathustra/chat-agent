@@ -25,8 +25,8 @@ logger = get_logger('app')
 
 @app.route('/')
 def index():
-    sid = get_thread_context()['sid']
-    ip = get_thread_context()['remote_ip']
+    sid = get_thread_context().get('sid')
+    ip = get_thread_context().get('remote_ip')
     logger.debug('new guest, sid: {} ip: {}'.format(sid, ip))
     return send_from_directory(app.static_folder, 'index.html')
 
@@ -52,7 +52,7 @@ def before():
     if 'sid' not in session:
         sid = random.get_random_md5()
         session['sid'] = sid
-    sid = session['sid']
+    sid = session.get('sid')
     get_thread_context()['sid'] = sid
     get_thread_context()['remote_ip'] = request.remote_addr
 

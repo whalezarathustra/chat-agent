@@ -23,7 +23,7 @@ def handle_connect():
 
 @server.on('disconnect')
 def handle_disconnect():
-    sid = get_thread_context()['sid']
+    sid = get_thread_context().get('sid')
     logger.info('客户端已断开连接, sid: {}'.format(sid))
     set_thread_context(None)
 
@@ -32,12 +32,12 @@ def handle_disconnect():
 def websock_chat(data):
     context = get_thread_context()
     request_msg = json.loads(data)
-    if 'sid' in request_msg:
-        context['sid'] = request_msg['sid']
+    if request_msg.get('sid'):
+        context['sid'] = request_msg.get('sid')
     else:
         sid = random.get_random_md5()
         context['sid'] = sid
-    for response_message in send_chat_message_with_socket_steam_response(msg=request_msg['data'], chat_log=None):
+    for response_message in send_chat_message_with_socket_steam_response(msg=request_msg.get('data'), chat_log=None):
         send_message('websocket_chat', response_message)
 
 

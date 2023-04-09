@@ -33,7 +33,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
 
 
 def get_valid_chat_log(chat_log: []):
-    sid = get_thread_context()['sid']
+    sid = get_thread_context().get('sid')
     valid_context_chat_log = []
     for chat in chat_log:
         if 'user' == chat['role']:
@@ -52,7 +52,7 @@ def get_valid_chat_log(chat_log: []):
 
 
 def send_chat_message_with_steam_response(msg: str, chat_log: [] = None):
-    sid = get_thread_context()['sid']
+    sid = get_thread_context().get('sid')
     ip = get_thread_context()['remote_ip']
     logger.debug('receive msg, sid: {} ip: {} msg: {}'.format(sid, ip, msg))
     is_need_cache = False
@@ -99,7 +99,7 @@ def send_chat_message_with_steam_response(msg: str, chat_log: [] = None):
 def send_chat_message_with_socket_steam_response(msg: str, chat_log: [] = None):
     msg_id = random.get_random_md5()
     index = 0
-    sid = get_thread_context()['sid']
+    sid = get_thread_context().get('sid')
     for response in send_chat_message_with_steam_response(msg=msg, chat_log=chat_log):
         response_msg = {
             'sid': sid,

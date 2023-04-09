@@ -24,7 +24,7 @@ logger = get_logger('websocket_app')
 
 @app.route('/')
 def index():
-    sid = get_thread_context()['sid']
+    sid = get_thread_context().get('sid')
     ip = get_thread_context()['remote_ip']
     logger.debug('new guest, sid: {} ip: {}'.format(sid, ip))
     return send_from_directory(app.static_folder, 'websocket_index.html')
@@ -58,7 +58,7 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    sid = get_thread_context()['sid']
+    sid = get_thread_context().get('sid')
     logger.info('客户端已断开连接, sid: {}'.format(sid))
     set_thread_context(None)
 
