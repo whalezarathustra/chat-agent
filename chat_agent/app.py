@@ -13,7 +13,7 @@ from chat_agent.handler.openai_handler import send_chat_message_with_steam_respo
 from chat_agent.logger.logger_helper import get_logger
 from chat_agent.util import random
 from chat_agent.util.context import get_thread_context
-from util.timeout import TimeoutError, timeout_decorator
+from chat_agent.util.timeout import TimeoutError, timeout_decorator
 
 app = Flask(__name__, static_folder=CHAT_AGENT_STATIC_PATH)
 socketio = SocketIO(app)

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="chat_agent",
-    version="0.1.6.6",
+    version="0.1.6.7",
     packages=find_packages(),
     zip_sage=False,
     include_package_data=True,
